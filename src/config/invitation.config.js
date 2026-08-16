@@ -16,7 +16,7 @@ export const invitation = {
   },
 
   // ISO 8601, 한국 시간대(+09:00) 명시
-  weddingDateTime: '2026-11-14T13:00:00+09:00',
+  weddingDateTime: '2028-11-14T13:00:00+09:00',
 
   venue: {
     name: '00웨딩홀 3층 그랜드홀',
