@@ -46,8 +46,15 @@ export const invitation = {
     title: 'Wedding BGM',
   },
 
-  // 카카오맵 JavaScript SDK 키 (https://developers.kakao.com 에서 발급)
-  kakaoMapApiKey: '',
+  // 오시는 길에 표시할 지도 설정
+  map: {
+    // 기본으로 보여줄 지도: 'naver' | 'kakao'
+    provider: 'naver',
+    // 네이버 지도 Client ID (https://www.ncloud.com 콘솔 > Maps 이용 신청 후 발급, 웹 서비스 URL 등록 필요)
+    naverClientId: '',
+    // 카카오맵 JavaScript SDK 키 (https://developers.kakao.com 에서 발급)
+    kakaoAppKey: '',
+  },
 
   // 계좌 정보 등, 나중에 섹션을 추가할 때 여기에 데이터만 늘리면 됩니다.
 }

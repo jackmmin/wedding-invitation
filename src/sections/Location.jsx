@@ -1,6 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { invitation } from '../config/invitation.config'
 
+function loadNaverMapScript(clientId) {
+  return new Promise((resolve, reject) => {
+    if (window.naver?.maps) return resolve(window.naver)
+
+    const script = document.createElement('script')
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${clientId}`
+    script.onload = () => resolve(window.naver)
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+}
+
 function loadKakaoMapScript(appKey) {
   return new Promise((resolve, reject) => {
     if (window.kakao?.maps) return resolve(window.kakao)
@@ -13,16 +25,38 @@ function loadKakaoMapScript(appKey) {
   })
 }
 
-export default function Location() {
-  const { venue } = invitation
+function NaverMap({ venue, clientId }) {
   const mapRef = useRef(null)
-  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (!invitation.kakaoMapApiKey || !mapRef.current) return
-
+    if (!clientId || !mapRef.current) return
     let cancelled = false
-    loadKakaoMapScript(invitation.kakaoMapApiKey)
+
+    loadNaverMapScript(clientId)
+      .then((naver) => {
+        if (cancelled) return
+        const center = new naver.maps.LatLng(venue.lat, venue.lng)
+        const map = new naver.maps.Map(mapRef.current, { center, zoom: 16 })
+        new naver.maps.Marker({ position: center, map })
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [venue.lat, venue.lng, clientId])
+
+  return <div ref={mapRef} className="w-full h-56 mt-8 bg-stone-100" />
+}
+
+function KakaoMap({ venue, appKey }) {
+  const mapRef = useRef(null)
+
+  useEffect(() => {
+    if (!appKey || !mapRef.current) return
+    let cancelled = false
+
+    loadKakaoMapScript(appKey)
       .then((kakao) => {
         if (cancelled) return
         const center = new kakao.maps.LatLng(venue.lat, venue.lng)
@@ -34,7 +68,18 @@ export default function Location() {
     return () => {
       cancelled = true
     }
-  }, [venue.lat, venue.lng])
+  }, [venue.lat, venue.lng, appKey])
+
+  return <div ref={mapRef} className="w-full h-56 mt-8 bg-stone-100" />
+}
+
+export default function Location() {
+  const { venue, map } = invitation
+  const [copied, setCopied] = useState(false)
+
+  const provider = map.provider === 'kakao' ? 'kakao' : 'naver'
+  const apiKey = provider === 'kakao' ? map.kakaoAppKey : map.naverClientId
+  const providerLabel = provider === 'kakao' ? '카카오맵' : '네이버지도'
 
   const copyAddress = async () => {
     try {
@@ -61,11 +106,15 @@ export default function Location() {
         {copied ? '복사됨' : '주소 복사'}
       </button>
 
-      {invitation.kakaoMapApiKey ? (
-        <div ref={mapRef} className="w-full h-56 mt-8 bg-stone-100" />
+      {apiKey ? (
+        provider === 'kakao' ? (
+          <KakaoMap venue={venue} appKey={apiKey} />
+        ) : (
+          <NaverMap venue={venue} clientId={apiKey} />
+        )
       ) : (
         <div className="w-full h-40 mt-8 bg-stone-100 flex items-center justify-center text-stone-400 text-xs px-4">
-          카카오맵 API 키를 config에 등록하면 지도가 표시됩니다
+          {`config의 map.${provider === 'kakao' ? 'kakaoAppKey' : 'naverClientId'}를 등록하면 ${providerLabel}가 표시됩니다`}
         </div>
       )}
 
